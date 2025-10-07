@@ -1,0 +1,47 @@
+{
+  "name": "vatsake/php-asice",
+  "description": "XAdES/ASiC-E digital signature library for PHP",
+  "type": "library",
+  "version": "1.0.0",
+  "autoload": {
+    "psr-4": {
+      "Vatsake\\AsicE\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Vatsake\\AsicE\\tests\\": "tests"
+    }
+  },
+  "authors": [
+    {
+      "name": "Erko Sten Hürges",
+      "email": "erko124@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=8.1",
+    "phpseclib/phpseclib": "^3.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^12",
+    "squizlabs/php_codesniffer": "^4.0"
+  },
+  "scripts": {
+    "test": "phpunit --coverage-html coverage"
+  },
+  "archive": {
+    "exclude": [
+      "/tests"
+    ]
+  },
+  "keywords": [
+    "xades",
+    "digital-signature",
+    "asic-e",
+    "php",
+    "xml",
+    "signature"
+  ],
+  "license": "MIT"
+}
