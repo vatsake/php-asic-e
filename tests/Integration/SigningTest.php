@@ -52,7 +52,9 @@ class SigningTest extends TestCase
         $ca = Utils::stripPemHeaders(file_get_contents(self::TEST_CA_PATH));
         AsiceConfig::getInstance()->fromArray([
             'countryCode' => 'LT',
-            'lotl' => [$ca]
+            'lotl' => [$ca],
+            'tsaUrl' => 'https://freetsa.org/tsr',
+            'ocspUrl' => 'http://demo.sk.ee/ocsp'
         ]);
 
         $tempPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'test-container-1.asice';

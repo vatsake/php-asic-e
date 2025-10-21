@@ -51,7 +51,7 @@ class ResponderCertificateValidator implements Validator
             return new ValidationResult(false, 'Responder certificate is missing the "OCSP Signing" extended key usage.', $parsedLeaf['extensions']['extendedKeyUsage']);
         }
 
-        // Old certificates might not have that key usage
+        // Older certificates might not have that key usage
         //if (!str_contains($parsedLeaf['extensions']['keyUsage'], 'Digital Signature')) {
         //    return new ValidationResult(false, 'Responder certificate key usage must include digital signature.', $parsedLeaf['extensions']['keyUsage']);
         //}

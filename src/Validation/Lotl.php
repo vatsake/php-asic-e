@@ -11,6 +11,14 @@ use Vatsake\AsicE\Common\Utils;
 use Vatsake\AsicE\Container;
 use Vatsake\AsicE\Exceptions\HttpException;
 
+/**
+ * Manage the EU LOTL and build a trusted CA store.
+ *
+ * - Download and parse LOTL/TSL to extract CA X.509 certificates.
+ * - Maintain a phpseclib X509 CA store and sha256(DER) fingerprints.
+ * - Persist the trusted CA list via AsiceConfig and provide verify()/refresh().
+ *
+ */
 final class Lotl extends Container
 {
     private const LOTL_URL = 'https://ec.europa.eu/tools/lotl/eu-lotl.xml';
@@ -55,7 +63,7 @@ final class Lotl extends Container
         }
 
         $instance->trustedListX509->loadX509($certificate);
-        return $instance->trustedListX509->validateSignature();
+        return !!$instance->trustedListX509->validateSignature();
     }
 
     public static function refresh(): self

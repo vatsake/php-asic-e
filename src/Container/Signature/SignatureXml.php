@@ -35,7 +35,7 @@ final class SignatureXml
         } else {
             $this->doc = new DOMDocument('1.0', 'UTF-8');
             $this->doc->preserveWhiteSpace = true;
-            $this->doc->formatOutput = true;
+            $this->doc->formatOutput = false;
 
             if (!$this->doc->loadXML($xml)) {
                 throw new InvalidSignatureXml('Invalid XML provided');
@@ -272,7 +272,7 @@ final class SignatureXml
     {
         $this->doc = new DOMDocument('1.0', 'UTF-8');
         $this->doc->preserveWhiteSpace = true;
-        $this->doc->formatOutput = true;
+        $this->doc->formatOutput = false;
 
         $root = $this->doc->createElementNS(self::NS_ASIC, 'asic:XAdESSignatures');
         $root->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ds', self::NS_DS);
@@ -289,8 +289,10 @@ final class SignatureXml
      *
      * @param string $signerCertificate base64 encoded
      * @param string $numOfFiles number of datafiles in container
+     * @param array{City: string|null, StateOrProvince: string|null, PostalCode: int|string|null, CountryName: string|null} $productionPlace
+     * @param array<int, string> $signerRoles
      */
-    public function createSignedProperties(string $signerCertificate, int $numOfFiles): DOMElement
+    public function createSignedProperties(string $signerCertificate, int $numOfFiles, array $productionPlace = [], array $signerRoles = []): DOMElement
     {
         if ($this->doc->getElementsByTagName('Object')->count() > 0) {
             throw new \RuntimeException('Signed properties already created');
@@ -299,7 +301,7 @@ final class SignatureXml
         $signingTime = new DateTime();
         $signerCert = openssl_x509_parse($signerCertificate);
         if ($signerCert === false) {
-            throw new InvalidCertificateException('Invalid certificate', $signerCertificate);
+            throw new InvalidCertificateException('Invalid certificate, is it in base64 format?', $signerCertificate);
         }
 
         $obj = $this->doc->createElementNS(self::NS_DS, 'ds:Object');
@@ -346,6 +348,33 @@ final class SignatureXml
         $serialNum = $this->doc->createElementNS(self::NS_DS, 'ds:X509SerialNumber', Utils::serialToNumber($signerCert['serialNumber']));
         $issSerial->appendChild($serialNum);
 
+        $spp = $this->doc->createElementNS(self::NS_XADES, 'xades:SignatureProductionPlace');
+
+        $isAnySet = false;
+        foreach ($productionPlace as $key => $value) {
+            if ($value !== null) {
+                $element = $this->doc->createElementNS(self::NS_XADES, 'xades:' . $key, (string) $value);
+                $spp->appendChild($element);
+                $isAnySet = true;
+            }
+        }
+        if ($isAnySet) {
+            $ssp->appendChild($spp);
+        }
+
+        if (sizeof($signerRoles) > 0) {
+            $sr = $this->doc->createElementNS(self::NS_XADES, 'xades:SignerRoleV2');
+            $ssp->appendChild($sr);
+
+            $csr = $this->doc->createElementNS(self::NS_XADES, 'xades:ClaimedRoles');
+            $sr->appendChild($csr);
+
+            foreach ($signerRoles as $role) {
+                $roleEl = $this->doc->createElementNS(self::NS_XADES, 'xades:ClaimedRole', $role);
+                $csr->appendChild($roleEl);
+            }
+        }
+
         $sdop = $this->doc->createElementNS(self::NS_XADES, 'xades:SignedDataObjectProperties');
         $sp->appendChild($sdop);
 
@@ -387,6 +416,8 @@ final class SignatureXml
         $i = 0;
         foreach ($fileDigests as $name => $digest) {
             $ref = $this->doc->createElementNS(self::NS_DS, 'ds:Reference');
+            $ref->setAttribute('Id', $this->id . '-RefId' . $i);
+            $ref->setIdAttribute('Id', true);
             $ref->setAttribute('URI', rawurlencode($name));
             $si->append($ref);
 

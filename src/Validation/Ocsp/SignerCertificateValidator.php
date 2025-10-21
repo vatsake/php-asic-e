@@ -14,7 +14,7 @@ use Vatsake\AsicE\Container\Signature\SignatureXml;
  */
 class SignerCertificateValidator implements Validator
 {
-    private const CLOCK_SKEW_SECONDS = 120;
+    private const CLOCK_SKEW_SECONDS = 10 * 60;
 
     public function __construct(private OcspBasicResponse $response, private SignatureXml $xml)
     {

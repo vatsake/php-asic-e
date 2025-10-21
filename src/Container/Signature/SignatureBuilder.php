@@ -18,6 +18,15 @@ final class SignatureBuilder
 {
     private ?string $signerCertificate;
 
+    private array $productionPlace = [
+        'city' => null,
+        'stateOrProvince' => null,
+        'postalCode' => null,
+        'countryName' => null,
+    ];
+
+    private array $signerRoles = [];
+
     private DigestAlg $signedPropertiesDigestAlg = DigestAlg::SHA256;
 
     private SignAlg $signatureAlg = SignAlg::ECDSA_SHA256;
@@ -65,6 +74,40 @@ final class SignatureBuilder
         return $this->signatureAlg;
     }
 
+    /**
+     * @param array<int, string> $roles
+     */
+    public function setSignerRoles(array $roles): self
+    {
+        $this->signerRoles = $roles;
+        return $this;
+    }
+
+    public function getSignerRoles(): array
+    {
+        return $this->signerRoles;
+    }
+
+    public function setSignatureProductionPlace(null|string $city, null|string $stateOrProvince, null|int|string $postalCode, null|string $countryName): self
+    {
+        $this->productionPlace = [
+            'City' => $city,
+            'StateOrProvince' => $stateOrProvince,
+            'PostalCode' => $postalCode,
+            'CountryName' => $countryName
+        ];
+        return $this;
+    }
+
+    /**
+     * @return array{City: string|null, StateOrProvince: string|null, PostalCode: int|string|null, CountryName: string|null}
+     */
+    public function getSignatureProductionPlace(): array
+    {
+        return $this->productionPlace;
+    }
+
+
     public function setSignedPropertiesDigestAlg(DigestAlg $digestAlg): self
     {
         $this->signedPropertiesDigestAlg = $digestAlg;
@@ -84,7 +127,7 @@ final class SignatureBuilder
             throw new \RuntimeException('Cannot get data to be signed: signer certificate not set');
         }
 
-        $this->xmlWriter->createSignedProperties($this->signerCertificate, sizeof($this->fileDigests));
+        $this->xmlWriter->createSignedProperties($this->signerCertificate, sizeof($this->fileDigests), $this->productionPlace, $this->signerRoles);
         $this->xmlWriter->createSignedInfo($this->fileDigests, $this->signatureAlg, $this->signedPropertiesDigestAlg);
 
         $xml = $this->xmlWriter->getSignedInfoCanonicalized();
@@ -112,7 +155,7 @@ final class SignatureBuilder
         return new FinalizedSignature($this->xmlWriter, $this->fileDigests);
     }
 
-    public function generateTimestampToken(string $signatureValueNodeCanonicalized): string
+    private function generateTimestampToken(string $signatureValueNodeCanonicalized): string
     {
         $url = AsiceConfig::getTsaUrl();
         if (!$url) {
@@ -124,7 +167,7 @@ final class SignatureBuilder
         return $token;
     }
 
-    public function generateOcspToken(string $signerCert, string $issuerCert): string
+    private function generateOcspToken(string $signerCert, string $issuerCert): string
     {
         $url = AsiceConfig::getOcspUrl();
         if (!$url) {

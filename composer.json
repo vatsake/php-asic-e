@@ -1,8 +1,7 @@
 {
-  "name": "vatsake/php-asice",
-  "description": "XAdES/ASiC-E digital signature library for PHP",
+  "name": "vatsake/php-asic-e",
+  "description": "Lightweight PHP library for creating and validating XAdES-T and ASiC-E digital signatures (compatible with Estonian DigiDoc).",
   "type": "library",
-  "version": "1.0.0",
   "autoload": {
     "psr-4": {
       "Vatsake\\AsicE\\": "src"
@@ -16,7 +15,8 @@
   "authors": [
     {
       "name": "Erko Sten Hürges",
-      "email": "erko124@gmail.com"
+      "email": "erko124@gmail.com",
+      "role": "Developer"
     }
   ],
   "require": {
@@ -28,20 +28,34 @@
     "squizlabs/php_codesniffer": "^4.0"
   },
   "scripts": {
-    "test": "phpunit --coverage-html coverage"
+    "test": "phpunit --coverage-html coverage",
+    "lint": "phpcs src"
   },
   "archive": {
     "exclude": [
-      "/tests"
+      "/tests",
+      "/phpcs.xml",
+      "phpunit.xml"
     ]
   },
+  "support": {
+    "issues": "https://github.com/vatsake/php-asic-e/issues",
+    "source": "https://github.com/vatsake/php-asic-e",
+    "docs": "https://github.com/vatsake/php-asic-e#readme"
+  },
+  "homepage": "https://github.com/vatsake/php-asic-e",
   "keywords": [
     "xades",
-    "digital-signature",
+    "digital signature",
     "asic-e",
     "php",
+    "security",
+    "timestamp",
+    "ocsp",
     "xml",
     "signature"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "minimum-stability": "stable",
+  "prefer-stable": true
 }
