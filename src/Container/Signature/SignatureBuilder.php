@@ -51,7 +51,7 @@ final class SignatureBuilder
      */
     public function setSigner(string $certificate): self
     {
-        $this->signerCertificate = $certificate;
+        $this->signerCertificate = Utils::formatAsPemCertificate($certificate);
         return $this;
     }
 
@@ -151,7 +151,7 @@ final class SignatureBuilder
         $issuerCertificate = Utils::getIssuerCert($this->signerCertificate);
         $ocspToken = $this->generateOcspToken($this->signerCertificate, $issuerCertificate);
 
-        $this->xmlWriter->createUnsignedProperties(Utils::stripPemHeaders($issuerCertificate), $timestampToken, $ocspToken);
+        $this->xmlWriter->createUnsignedProperties(Utils::removePemFormatting($issuerCertificate), $timestampToken, $ocspToken);
         return new FinalizedSignature($this->xmlWriter, $this->fileDigests);
     }
 

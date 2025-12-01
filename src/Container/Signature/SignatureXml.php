@@ -334,7 +334,7 @@ final class SignatureXml
         $certDm->setAttribute('Algorithm', DigestAlg::SHA256->getUrl());
         $certDigest->appendChild($certDm);
 
-        $der = base64_decode(Utils::stripPemHeaders($signerCertificate));
+        $der = base64_decode(Utils::removePemFormatting($signerCertificate));
         $hash = base64_encode(hash(DigestAlg::SHA256->value, $der, true));
         $certDigest->appendChild($this->doc->createElementNS(self::NS_DS, 'ds:DigestValue', $hash));
 
@@ -471,7 +471,7 @@ final class SignatureXml
         $x509Data = $this->doc->createElementNS(self::NS_DS, 'ds:X509Data');
         $keyInfo->appendChild($x509Data);
 
-        $cert = $this->doc->createElementNS(self::NS_DS, 'ds:X509Certificate', Utils::stripPemHeaders($signerCertificate));
+        $cert = $this->doc->createElementNS(self::NS_DS, 'ds:X509Certificate', Utils::removePemFormatting($signerCertificate));
         $x509Data->appendChild($cert);
     }
 

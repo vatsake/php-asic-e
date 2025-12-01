@@ -16,7 +16,6 @@ use Vatsake\AsicE\Container\Signature\FinalizedSignature;
 use Vatsake\AsicE\Container\Signature\SignatureBuilder;
 use Vatsake\AsicE\Container\UnsignedContainer;
 use Vatsake\AsicE\Crypto\SignAlg;
-use Vatsake\AsicE\Validation\Lotl;
 
 class SigningTest extends TestCase
 {
@@ -28,7 +27,7 @@ class SigningTest extends TestCase
 
     public function testValidateSignaturesAllValid(): void
     {
-        $ca = Utils::stripPemHeaders(file_get_contents(self::TEST_CA_PATH));
+        $ca = Utils::removePemFormatting(file_get_contents(self::TEST_CA_PATH));
         AsiceConfig::getInstance()->fromArray([
             'countryCode' => 'LT',
             'lotl' => [$ca]
@@ -49,7 +48,7 @@ class SigningTest extends TestCase
 
     public function testCreateValidContainer(): void
     {
-        $ca = Utils::stripPemHeaders(file_get_contents(self::TEST_CA_PATH));
+        $ca = Utils::removePemFormatting(file_get_contents(self::TEST_CA_PATH));
         AsiceConfig::getInstance()->fromArray([
             'countryCode' => 'LT',
             'lotl' => [$ca],

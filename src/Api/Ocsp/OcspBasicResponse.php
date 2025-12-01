@@ -77,7 +77,7 @@ class OcspBasicResponse
      */
     public function getOcspResponderCertificate()
     {
-        return Utils::addPemHeaders(base64_encode($this->data['certs'][0]->element));
+        return Utils::formatAsPemCertificate(base64_encode($this->data['certs'][0]->element));
     }
 
     public function getSignature(): string

@@ -9,7 +9,7 @@ use Vatsake\AsicE\Api\HttpClient;
 
 abstract class Utils
 {
-    public static function stripPemHeaders(string $pem): string
+    public static function removePemFormatting(string $pem): string
     {
         return preg_replace(
             '/-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|\s+/',
@@ -18,7 +18,7 @@ abstract class Utils
         );
     }
 
-    public static function stripPubHeaders(string $pem): string
+    public static function removePublicKeyPemFormatting(string $pem): string
     {
         return preg_replace(
             '/-----BEGIN PUBLIC KEY-----|-----END PUBLIC KEY-----|\s+/',
@@ -27,12 +27,12 @@ abstract class Utils
         );
     }
 
-    public static function addPemHeaders(string $pem): string
+    public static function formatAsPemCertificate(string $cert): string
     {
-        if (str_contains($pem, 'BEGIN CERTIFICATE')) {
-            return $pem;
+        if (str_contains($cert, 'BEGIN CERTIFICATE')) {
+            return $cert;
         }
-        return "-----BEGIN CERTIFICATE-----\n" . $pem . "\n-----END CERTIFICATE-----";
+        return "-----BEGIN CERTIFICATE-----\n" . $cert . "\n-----END CERTIFICATE-----";
     }
 
     public static function getIssuerCert(string $subjectCertificate, array $certificates = []): string
@@ -48,9 +48,9 @@ abstract class Utils
         ) {
             $issuerIdentifier = $parsedSubjectCert['extensions']['authorityKeyIdentifier'];
             foreach ($certificates as $certificate) {
-                $parsedCert = openssl_x509_parse(Utils::addPemHeaders($certificate));
+                $parsedCert = openssl_x509_parse(Utils::formatAsPemCertificate($certificate));
                 if ($parsedCert['extensions']['subjectKeyIdentifier'] === $issuerIdentifier) {
-                    return Utils::addPemHeaders($certificate);
+                    return Utils::formatAsPemCertificate($certificate);
                 }
             }
         }
@@ -72,7 +72,7 @@ abstract class Utils
                 $caUrl = explode('URI:', $url)[1];
                 $cert = $httpClient->get($caUrl);
                 if ($cert !== '') {
-                    return Utils::addPemHeaders(base64_encode($cert));
+                    return Utils::formatAsPemCertificate(base64_encode($cert));
                 }
             }
         }

@@ -18,9 +18,7 @@ use Vatsake\AsicE\Container\Signature\SignatureXml;
  */
 class SignatureValueValidator implements Validator
 {
-    public function __construct(private SignatureXml $xml)
-    {
-    }
+    public function __construct(private SignatureXml $xml) {}
 
     public function validate(): ValidationResult
     {
@@ -32,7 +30,7 @@ class SignatureValueValidator implements Validator
             return new ValidationResult(false, 'Unable to decode signature value for signature validation.');
         }
 
-        $cert = openssl_x509_read(Utils::addPemHeaders($this->xml->getSignerCertificate()));
+        $cert = openssl_x509_read(Utils::formatAsPemCertificate($this->xml->getSignerCertificate()));
         if ($cert === false) {
             return new ValidationResult(false, 'Unable to parse signer certificate for signature validation.');
         }

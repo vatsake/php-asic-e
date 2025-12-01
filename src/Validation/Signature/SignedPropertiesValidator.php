@@ -14,9 +14,7 @@ use Vatsake\AsicE\Container\Signature\SignatureXml;
  */
 class SignedPropertiesValidator implements Validator
 {
-    public function __construct(private SignatureXml $xml)
-    {
-    }
+    public function __construct(private SignatureXml $xml) {}
 
     public function validate(): ValidationResult
     {
@@ -24,7 +22,7 @@ class SignedPropertiesValidator implements Validator
         $digest = $this->xml->getSignedPropertiesDigest();
 
         $signerCertificate = $this->xml->getSignerCertificate();
-        $parsedSignerCert = openssl_x509_parse(Utils::addPemHeaders($signerCertificate));
+        $parsedSignerCert = openssl_x509_parse(Utils::formatAsPemCertificate($signerCertificate));
         if ($parsedSignerCert === false) {
             return new ValidationResult(false, 'Unable to parse signer certificate.', [$signerCertificate]);
         }

@@ -16,13 +16,11 @@ use Vatsake\AsicE\Container\Signature\SignatureXml;
  */
 class PayloadValidator implements Validator
 {
-    public function __construct(private OcspBasicResponse $response, private SignatureXml $xml)
-    {
-    }
+    public function __construct(private OcspBasicResponse $response, private SignatureXml $xml) {}
 
     public function validate(): ValidationResult
     {
-        $signerCertificate = Utils::addPemHeaders($this->xml->getSignerCertificate());
+        $signerCertificate = Utils::formatAsPemCertificate($this->xml->getSignerCertificate());
         $certs = $this->xml->getEncapsulatedCertificates();
 
         try {
@@ -85,7 +83,7 @@ class PayloadValidator implements Validator
             return null;
         }
 
-        $derPublicKey = base64_decode(Utils::stripPubHeaders($details['key']), true);
+        $derPublicKey = base64_decode(Utils::removePublicKeyPemFormatting($details['key']), true);
         if ($derPublicKey === false) {
             return null;
         }

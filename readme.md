@@ -42,10 +42,10 @@ AsiceConfig::setOcspUrl(/* OCSP URL */)
 // 1a: Create a new ASiC-E container
 $uc = new UnsignedContainer();
 $uc->addFile('foo.txt', 'bar');
-$container = $uc->build(__DIR__ . '\foobar.asice'); // Writes to disk
+$container = $uc->build(__DIR__ . '/foobar.asice'); // Writes to disk
 
 // 1b: Existing container
-$container = new Container(__DIR__ . '\foobar.asice');
+$container = new Container(__DIR__ . '/foobar.asice');
 
 // 2. Prepare a signature
 $builder = $container->createSignature();
@@ -70,7 +70,7 @@ openssl_sign($dataToBeSigned, $signatureValue, $pkeyid, OPENSSL_ALGO_SHA256); //
 $signature = unserialize(file_get_contents('temp'));
 $finalizedSignature = $signature->finalize($signatureValue);
 
-$container = new Container(__DIR__ . '\foobar.asice');
+$container = new Container(__DIR__ . '/foobar.asice');
 $container->addSignature($finalizedSignature);
 ```
 
@@ -167,6 +167,9 @@ which can slow initialization and increase memory use.
 - Long-term (LT/LTA) and archival timestamping are planned for future versions.
 - Fully compatible with **Estonian DigiDoc** — DigiDoc will display these as<br>
   **“BES / time-stamp“ (XAdES-T)** signatures
+
+> [!NOTE]
+> This library has a limited user base (me, myself and I 😉), so there's bound to be some bugs. Feel free to report issues or contribute improvements!
 
 ## ⚖️ License
 

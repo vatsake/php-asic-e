@@ -94,7 +94,7 @@ final class Lotl extends Container
 
     private function getCertFingerprint(string $cert): string
     {
-        return hash('sha256', base64_decode(Utils::stripPemHeaders($cert), true));
+        return hash('sha256', base64_decode(Utils::removePemFormatting($cert), true));
     }
 
     private function loadTsl(string $countryTslUrl): array

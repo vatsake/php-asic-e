@@ -41,7 +41,7 @@ class SignatureXmlTest extends TestCase
     public function testCreateSignedPropertiesPopulatesSignerDataAndSignerDigest(): void
     {
         $pem = file_get_contents(self::TEST_TRUSTED_X509_PATH);
-        $digest = base64_encode(hash('sha256', base64_decode(Utils::stripPemHeaders($pem)), true));
+        $digest = base64_encode(hash('sha256', base64_decode(Utils::removePemFormatting($pem)), true));
         $sn = $this->parseSerialFromPem($pem);
 
         $sig = new SignatureXml();

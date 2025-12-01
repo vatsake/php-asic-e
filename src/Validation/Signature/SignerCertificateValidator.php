@@ -15,14 +15,12 @@ use Vatsake\AsicE\Container\Signature\SignatureXml;
  */
 class SignerCertificateValidator implements Validator
 {
-    public function __construct(private SignatureXml $xml)
-    {
-    }
+    public function __construct(private SignatureXml $xml) {}
 
     public function validate(): ValidationResult
     {
         $lotl = Lotl::getInstance();
-        $signerCertificate = Utils::addPemHeaders($this->xml->getSignerCertificate());
+        $signerCertificate = Utils::formatAsPemCertificate($this->xml->getSignerCertificate());
         $signingTime = $this->xml->getSigningTime();
         $parsedCert = openssl_x509_parse($signerCertificate);
 

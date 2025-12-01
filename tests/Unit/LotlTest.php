@@ -33,7 +33,7 @@ class LotlTest extends TestCase
         $ca = file_get_contents(self::TEST_CA_PATH);
 
         $config = AsiceConfig::getInstance();
-        $config->setCountryCode('EE')->setLotl([Utils::stripPemHeaders($ca)]);
+        $config->setCountryCode('EE')->setLotl([Utils::removePemFormatting($ca)]);
 
         $signer = file_get_contents(self::TEST_TRUSTED_X509_PATH);
         $this->assertTrue(Lotl::verify($signer));
@@ -44,7 +44,7 @@ class LotlTest extends TestCase
         $ca = file_get_contents(self::TEST_CA_PATH);
 
         $config = AsiceConfig::getInstance();
-        $config->setCountryCode('EE')->setLotl([Utils::stripPemHeaders($ca)]);
+        $config->setCountryCode('EE')->setLotl([Utils::removePemFormatting($ca)]);
 
         $signer = file_get_contents(self::TEST_UNTRUSTED_X509_PATH);
         $this->assertFalse(Lotl::verify($signer));
@@ -55,7 +55,7 @@ class LotlTest extends TestCase
         $ca = file_get_contents(self::TEST_CA_PATH);
 
         $config = AsiceConfig::getInstance();
-        $config->setCountryCode('EE')->setLotl([Utils::stripPemHeaders($ca)]);
+        $config->setCountryCode('EE')->setLotl([Utils::removePemFormatting($ca)]);
 
         $this->assertTrue(Lotl::verify($ca));
     }
@@ -91,7 +91,7 @@ class LotlTest extends TestCase
     public function testLoadsLotlFromConfig()
     {
         $ca1 = file_get_contents(self::TEST_CA_PATH);
-        AsiceConfig::getInstance()->setLotl([Utils::stripPemHeaders($ca1)]);
+        AsiceConfig::getInstance()->setLotl([Utils::removePemFormatting($ca1)]);
 
         $lotl = Lotl::getInstance();
         $lotl->verify($ca1);
@@ -103,7 +103,7 @@ class LotlTest extends TestCase
     public function testDoesNotReloadIfLotlUnchanged()
     {
         $ca1 = file_get_contents(self::TEST_CA_PATH);
-        AsiceConfig::getInstance()->setLotl([Utils::stripPemHeaders($ca1)]);
+        AsiceConfig::getInstance()->setLotl([Utils::removePemFormatting($ca1)]);
 
         $lotl = Lotl::getInstance();
         $lotl->verify($ca1);
@@ -120,14 +120,14 @@ class LotlTest extends TestCase
     {
         $ca1 = file_get_contents(self::TEST_CA_PATH);
         $trustedCert = file_get_contents(self::TEST_TRUSTED_X509_PATH);
-        AsiceConfig::getInstance()->setLotl([Utils::stripPemHeaders($ca1)]);
+        AsiceConfig::getInstance()->setLotl([Utils::removePemFormatting($ca1)]);
 
         $lotl = Lotl::getInstance();
         $lotl->verify($ca1);
         $firstFingerprints = $this->getPrivateProperty($lotl, 'fingerprints');
 
         // Change config
-        AsiceConfig::getInstance()->setLotl([Utils::stripPemHeaders($trustedCert)]);
+        AsiceConfig::getInstance()->setLotl([Utils::removePemFormatting($trustedCert)]);
         $lotl->verify($ca1);
         $secondFingerprints = $this->getPrivateProperty($lotl, 'fingerprints');
 

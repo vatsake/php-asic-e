@@ -147,7 +147,7 @@ class OcspRequest implements HttpRequest
     private function getIssuerPublicKey(): string
     {
         $publicKey = $this->issuer->getPublicKey()->toString('PKCS8');
-        $keyData = Utils::stripPubHeaders($publicKey);
+        $keyData = Utils::removePublicKeyPemFormatting($publicKey);
 
         $nodes = ASN1::decodeBER(base64_decode($keyData));
 

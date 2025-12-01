@@ -23,7 +23,7 @@ class TimestampToken
 
     public function getTsaResponderCertificate()
     {
-        return Utils::addPemHeaders(base64_encode(Asn1Helper::encode($this->data['content']['certificates'][0]['certificate'], Certificate::MAP)));
+        return Utils::formatAsPemCertificate(base64_encode(Asn1Helper::encode($this->data['content']['certificates'][0]['certificate'], Certificate::MAP)));
     }
 
     public function getSignature()
