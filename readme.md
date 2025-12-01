@@ -45,7 +45,7 @@ $uc->addFile('foo.txt', 'bar');
 $container = $uc->build(__DIR__ . '\foobar.asice'); // Writes to disk
 
 // 1b: Existing container
-$container = new Container(__DIR__ . '\foobar.asice');
+$container = Container::open(__DIR__ . '\foobar.asice');
 
 // 2. Prepare a signature
 $builder = $container->createSignature();
@@ -70,7 +70,7 @@ openssl_sign($dataToBeSigned, $signatureValue, $pkeyid, OPENSSL_ALGO_SHA256); //
 $signature = unserialize(file_get_contents('temp'));
 $finalizedSignature = $signature->finalize($signatureValue);
 
-$container = new Container(__DIR__ . '\foobar.asice');
+$container = Container::open(__DIR__ . '\foobar.asice');
 $container->addSignature($finalizedSignature);
 ```
 
@@ -83,7 +83,7 @@ use Vatsake\AsicE\AsiceConfig;
 
 AsiceConfig::setCountryCode('EE'); // Limit trust anchors to Estonia
 
-$container = new Container('/foobar.asice');
+$container = Container::open('/foobar.asice');
 
 // Option 1 – validate all signatures
 $container->validateSignatures(); // Returns array{index: int, valid: bool, errors: ValidationResult[]}

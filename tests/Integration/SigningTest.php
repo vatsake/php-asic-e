@@ -34,7 +34,7 @@ class SigningTest extends TestCase
             'lotl' => [$ca]
         ]);
 
-        $container = new Container(self::SIGNED_CONTAINER_PATH);
+        $container = Container::open(self::SIGNED_CONTAINER_PATH);
         $results = $container->validateSignatures();
 
         $this->assertNotEmpty($results, 'Expected at least one validation result');
