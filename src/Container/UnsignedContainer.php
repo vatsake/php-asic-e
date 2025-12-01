@@ -43,7 +43,7 @@ final class UnsignedContainer
 
         $this->sealed = true;
 
-        return new Container($path);
+        return Container::open($path);
     }
 
     private function checkIfContainerIsSealed()

@@ -37,7 +37,7 @@ use Vatsake\AsicE\Crypto\SignAlg;
 
 // Configure TSA and OCSP endpoints
 AsiceConfig::setOcspUrl(/* OCSP URL */)
-  ->setTsaUrl(/* TSA URL */);
+    ->setTsaUrl(/* TSA URL */);
 
 // 1a: Create a new ASiC-E container
 $uc = new UnsignedContainer();
@@ -45,7 +45,7 @@ $uc->addFile('foo.txt', 'bar');
 $container = $uc->build(__DIR__ . '/foobar.asice'); // Writes to disk
 
 // 1b: Existing container
-$container = new Container(__DIR__ . '/foobar.asice');
+$container = Container::open(__DIR__ . '/foobar.asice');
 
 // 2. Prepare a signature
 $builder = $container->createSignature();
@@ -56,10 +56,11 @@ $dataToBeSigned = $builder
   ->setSignerRoles(['Agreed']) // (optional)
   ->getDataToBeSigned(true); // true → raw canonicalized bytes
 // Typically $dataToBeSigned (not raw) is returned to the user to sign; so we have to save incomplete signature somewhere (preferrably in user's session)
-file_put_contents('temp', serialize($signature));
+file_put_contents('temp', serialize($builder));
 
 
 // 3. User signs data
+// Typically $dataToBeSigned (not raw) is returned to the user to sign (if signing via ID-card)
 // In php it could be something like this:
 $pkeyid = openssl_pkey_get_private(/* Private key */);
 openssl_sign($dataToBeSigned, $signatureValue, $pkeyid, OPENSSL_ALGO_SHA256); // PHP's openssl sign needs RAW sign data
@@ -70,7 +71,7 @@ openssl_sign($dataToBeSigned, $signatureValue, $pkeyid, OPENSSL_ALGO_SHA256); //
 $signature = unserialize(file_get_contents('temp'));
 $finalizedSignature = $signature->finalize($signatureValue);
 
-$container = new Container(__DIR__ . '/foobar.asice');
+$container = Container::open(__DIR__ . '/foobar.asice');
 $container->addSignature($finalizedSignature);
 ```
 
@@ -83,10 +84,10 @@ use Vatsake\AsicE\AsiceConfig;
 
 AsiceConfig::setCountryCode('EE'); // Limit trust anchors to Estonia
 
-$container = new Container('/foobar.asice');
+$container = Container::open('/foobar.asice');
 
 // Option 1 – validate all signatures
-$container->validateSignatures(); // Returns array{index: int, valid: bool, errors: ValidationResult[]}
+$container->validateSignatures(); // Returns array<array{index: int, valid: bool, errors: ValidationResult[]}>
 
 // Option 2 – iterate manually
 foreach ($container->getSignatures() as $i => $sig) {
@@ -139,9 +140,9 @@ file_put_contents('foo', json_encode($lotl)); // Your application might have a c
 // Later (from cache)
 $lotl = json_decode(file_get_contents('foo'), true); // Again, you might have a cache server
 AsiceConfig::setLotl($lotl)
-  ->setOcspUrl(/* OCSP URL */)
-  ->setTsaUrl(/* TSA URL */)
-  ->setCountryCode('EE'); // If you filter trust anchors by country
+    ->setOcspUrl(/* OCSP URL */)
+    ->setTsaUrl(/* TSA URL */)
+    ->setCountryCode('EE'); // If you filter trust anchors by country
 ```
 
 <blockquote>

@@ -40,7 +40,7 @@ class ContainerTest extends TestCase
         ]);
 
         try {
-            $container = new Container($zipPath);
+            $container = Container::open($zipPath);
             $builder = $container->createSignature();
             $this->assertInstanceOf(SignatureBuilder::class, $builder);
 
@@ -67,7 +67,7 @@ class ContainerTest extends TestCase
         ]);
 
         try {
-            $container = new Container($zipPath);
+            $container = Container::open($zipPath);
 
             // Minimal signatures: we only need to supply XML; we’re not validating here.
             $sigXml1 = new SignatureXml(); // bare skeleton is enough for addSignature
@@ -98,7 +98,7 @@ class ContainerTest extends TestCase
     {
         $containerPath = $this->makeUnsignedContainerWithFiles([]);
         try {
-            $container = new Container($containerPath);
+            $container = Container::open($containerPath);
             $this->expectException(EmptyContainerException::class);
             $container->createSignature();
         } finally {
@@ -110,7 +110,7 @@ class ContainerTest extends TestCase
 
     public function testGetSignatures(): void
     {
-        $container = new Container(self::SIGNED_CONTAINER_PATH);
+        $container = Container::open(self::SIGNED_CONTAINER_PATH);
         $container->getSignatures();
         $this->assertCount(1, $container->getSignatures());
         $sig = $container->getSignatures()[0];

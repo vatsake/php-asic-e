@@ -14,9 +14,14 @@ final class Container
 {
     private ZipWriter $writer;
 
-    public function __construct(string $containerPath)
+    private function __construct(string $containerPath)
     {
         $this->writer = ZipWriter::openExisting($containerPath);
+    }
+
+    public static function open(string $containerPath): self
+    {
+        return new self($containerPath);
     }
 
     /**
