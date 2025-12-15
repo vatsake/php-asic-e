@@ -35,7 +35,7 @@ enum SignAlg: string
         };
     }
 
-    public static function fromName(string $name): self
+    public static function fromRsaName(string $name): self
     {
         return match (str_replace(['-', '_'], ['', ''], strtolower($name))) {
             'sha1' => self::RSA_SHA1,
@@ -43,10 +43,21 @@ enum SignAlg: string
             'sha256' => self::RSA_SHA256,
             'sha384' => self::RSA_SHA384,
             'sha512' => self::RSA_SHA512,
+            default => throw new \InvalidArgumentException('Unsupported RSA signature algorithm name: ' . $name),
+        };
+    }
+
+    public static function fromEcdsaName(string $name): self
+    {
+        return match (str_replace(['-', '_'], ['', ''], strtolower($name))) {
+            'sha224' => self::ECDSA_SHA224,
+            'sha256' => self::ECDSA_SHA256,
+            'sha384' => self::ECDSA_SHA384,
+            'sha512' => self::ECDSA_SHA512,
             'sha3256' => self::ECDSA_SHA3_256,
             'sha3384' => self::ECDSA_SHA3_384,
             'sha3512' => self::ECDSA_SHA3_512,
-            default => throw new \InvalidArgumentException('Unsupported signature algorithm name: ' . $name),
+            default => throw new \InvalidArgumentException('Unsupported ECDSA signature algorithm name: ' . $name),
         };
     }
 
