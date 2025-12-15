@@ -298,7 +298,7 @@ final class SignatureXml
             throw new \RuntimeException('Signed properties already created');
         }
 
-        $signingTime = new DateTime();
+        $signingTime = new DateTime('now', new \DateTimeZone('UTC'));
         $signerCert = openssl_x509_parse($signerCertificate);
         if ($signerCert === false) {
             throw new InvalidCertificateException('Invalid certificate, is it in base64 format?', $signerCertificate);
