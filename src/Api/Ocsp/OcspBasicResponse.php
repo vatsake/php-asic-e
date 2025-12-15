@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vatsake\AsicE\Api\Ocsp;
 
 use DateTimeImmutable;
+use phpseclib3\File\ASN1;
 use Vatsake\AsicE\ASN1\OcspBasicResponse as Response;
 use Vatsake\AsicE\Common\Asn1Helper;
 use Vatsake\AsicE\Common\Utils;
@@ -26,7 +27,7 @@ class OcspBasicResponse
 
     public function getIssuerPublicKeyHashAlg()
     {
-        return DigestAlg::fromOid($this->data['tbsResponseData']['responses'][0]['certID']['hashAlgorithm']['algorithm']);
+        return DigestAlg::fromOid(ASN1::getOID($this->data['tbsResponseData']['responses'][0]['certID']['hashAlgorithm']['algorithm']));
     }
 
     public function getSignerSerialNumber(): string

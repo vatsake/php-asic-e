@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vatsake\AsicE\Api\Tsa;
 
 use DateTimeImmutable;
+use phpseclib3\File\ASN1;
 use Vatsake\AsicE\ASN1\TSTInfo;
 use Vatsake\AsicE\Common\Asn1Helper;
 use Vatsake\AsicE\Crypto\DigestAlg;
@@ -20,7 +21,7 @@ class TimestampInfo
 
     public function getHashedAlgorithm(): DigestAlg
     {
-        return DigestAlg::fromOid($this->data['messageImprint']['hashAlgorithm']['algorithm']);
+        return DigestAlg::fromOid(ASN1::getOID($this->data['messageImprint']['hashAlgorithm']['algorithm']));
     }
 
     public function getHashedMessage(): string
