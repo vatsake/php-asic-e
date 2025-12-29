@@ -35,7 +35,8 @@ use Vatsake\AsicE\Container\Container;
 use Vatsake\AsicE\Container\UnsignedContainer;
 use Vatsake\AsicE\Crypto\SignAlg;
 
-// Configure TSA and OCSP endpoints
+// Configure TSA (and OCSP) endpoints
+// If setting OCSP endpoint here, it will only use that endpoint
 AsiceConfig::setOcspUrl(/* OCSP URL */)
     ->setTsaUrl(/* TSA URL */);
 

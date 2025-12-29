@@ -39,7 +39,7 @@ final class AsiceConfig extends Container
         return self::getInstance()->ocspUrl;
     }
 
-    public static function setOcspUrl(string $ocspUrl): self
+    public static function setOcspUrl(?string $ocspUrl): self
     {
         $instance = self::getInstance();
         $instance->ocspUrl = $ocspUrl;
