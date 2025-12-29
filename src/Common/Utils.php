@@ -80,6 +80,27 @@ abstract class Utils
         throw new \RuntimeException('Unable to get issuer certificate');
     }
 
+    public static function getOcspUrlFromCert(string $certificate): string
+    {
+        $parsedSubjectCert = openssl_x509_parse($certificate);
+        if ($parsedSubjectCert === false) {
+            throw new \InvalidArgumentException('Invalid certificate given');
+        }
+
+        if (!array_key_exists('authorityInfoAccess', $parsedSubjectCert['extensions'])) {
+            throw new \RuntimeException('Unable to get AIA OCSP URL from certificate');
+        }
+
+        $urls = explode("\n", $parsedSubjectCert['extensions']['authorityInfoAccess']);
+        foreach ($urls as $url) {
+            if (str_starts_with($url, 'OCSP')) {
+                return explode('URI:', $url)[1];
+            }
+        }
+
+        throw new \RuntimeException('Unable to get AIA OCSP URL from certificate');
+    }
+
     public static function stripBr(string $str): string
     {
         return str_replace(["\n", "\n"], [''], $str);

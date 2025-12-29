@@ -169,11 +169,11 @@ final class SignatureBuilder
 
     private function generateOcspToken(string $signerCert, string $issuerCert): string
     {
-        $url = AsiceConfig::getOcspUrl();
-        if (!$url) {
-            throw new ConfigParameterNotSet('OCSP URL not configured');
+        if (AsiceConfig::getOcspUrl()) {
+            $url = AsiceConfig::getOcspUrl();
+        } else {
+            $url = Utils::getOcspUrlFromCert($signerCert);
         }
-
         $request = new OcspRequest($url, $signerCert, $issuerCert);
         $token = (new OcspClient())->sendRequest($request)->getToken();
         return $token;

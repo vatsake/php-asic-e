@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vatsake\AsicE\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
+use Vatsake\AsicE\Common\Utils;
 use Vatsake\AsicE\Container\Signature\SignatureBuilder;
 use Vatsake\AsicE\Container\Signature\SignatureXml;
 use Vatsake\AsicE\Crypto\DigestAlg;
