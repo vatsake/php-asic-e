@@ -56,7 +56,7 @@ $dataToBeSigned = $builder
   ->setSignatureProductionPlace('Tallinn', 'Harjumaa', 99999, 'EE') // (optional)
   ->setSignerRoles(['Agreed']) // (optional)
   ->getDataToBeSigned(true); // true → raw canonicalized bytes
-// Typically $dataToBeSigned (not raw) is returned to the user to sign; so we have to save incomplete signature somewhere (preferrably in user's session)
+// Typically $dataToBeSigned (not raw) is returned to the user to sign; so we have to save incomplete signature somewhere (preferably in user's session)
 file_put_contents('temp', serialize($builder));
 
 
@@ -72,6 +72,197 @@ openssl_sign($dataToBeSigned, $signatureValue, $pkeyid, OPENSSL_ALGO_SHA256); //
 $signature = unserialize(file_get_contents('temp'));
 $finalizedSignature = $signature->finalize($signatureValue);
 
+$container = Container::open(__DIR__ . '/foobar.asice');
+$container->addSignature($finalizedSignature);
+```
+
+### 🚀 Signing example with Smart-ID client library
+
+Unfortunately the base Smart-id client doesn't support signing, so I forked the base library and added signing support
+
+```bash
+composer require vatsake/smart-id-php-client
+```
+
+```php
+use Vatsake\AsicE\AsiceConfig;
+use Vatsake\AsicE\Container\Container;
+use Vatsake\AsicE\Container\UnsignedContainer;
+use Vatsake\AsicE\Crypto\SignAlg;
+use Sk\SmartId\Api\Data\SignableData;
+use Sk\SmartId\Api\Data\SemanticsIdentifier;
+use Sk\SmartId\Api\Data\Interaction;
+use Sk\SmartId\Client;
+
+AsiceConfig::setTsaUrl('http://tsa.demo.sk.ee/tsa');
+
+# Smart ID client
+$client = new Client();
+$client->setRelyingPartyUUID('00000000-0000-0000-0000-000000000000')
+  ->setRelyingPartyName('DEMO')
+  ->setHostUrl('https://sid.demo.sk.ee/smart-id-rp/v2/');
+
+# Create container and add file
+$uc = new UnsignedContainer();
+$uc->addFile('foo.txt', 'bar');
+$container = $uc->build(__DIR__ . '/foobar.asice');
+
+# Get the signing certificate
+$semanticsIdentifier = SemanticsIdentifier::builder()
+  ->withSemanticsIdentifierType('PNO')
+  ->withCountryCode('LT')
+  ->withIdentifier('30303039914')
+  ->build();
+
+try {
+  $resp = $client->signature()
+    ->createCertificateChoice()
+    ->withSemanticsIdentifier($semanticsIdentifier)
+    ->chooseCertificate();
+} catch (\Exception $e) {
+  var_dump($e);
+  exit;
+  // Check official documentation to catch all exceptions
+}
+
+# Get data to be signed
+$builder = $container->createSignature();
+$dataToBeSigned = $builder
+  ->setSigner($resp->getCertificate()) // PEM certificate
+  ->setSignatureAlg(SignAlg::RSA_SHA256) // SMART-ID uses RSA algorithm
+  ->setSignatureProductionPlace('Tallinn', 'Harjumaa', 99999, 'EE') // (optional)
+  ->setSignerRoles(['Agreed']) // (optional)
+  ->getDataToBeSigned(true); // RAW - SignableData from Smart-id library gets digest
+// Might need to save builder instance
+file_put_contents('temp', serialize($builder));
+
+# Sign data via Smart-id
+
+$data = new SignatureHash($dataToBeSigned);
+$data->setHashType('SHA256');
+echo 'vccode ' . $data->calculateVerificationCode();
+
+try {
+  $resp = $client->signature()->createSignature()
+      ->withDocumentNumber($resp->getDocumentNumber())
+      ->withSignableData($data)
+      ->withAllowedInteractionsOrder([
+          Interaction::ofTypeVerificationCodeChoice('Sign?')
+      ])
+      ->sign();
+} catch (\Exception $e) { // Use exceptions below
+  var_dump($e);
+  exit;
+  // Check official documentation to catch all exceptions
+}
+
+// Attach signature
+/** @var \Vatsake\AsicE\Container\Signature\SignatureBuilder */
+$signature = unserialize(file_get_contents('temp'));
+$finalizedSignature = $signature->finalize($resp->getValueInBase64());
+$container = Container::open(__DIR__ . '/foobar.asice');
+$container->addSignature($finalizedSignature);
+```
+
+### 🚀 Signing example with Mobile-ID client library
+
+Unfortunately the base Mobile-id client doesn't support signing, so I forked the base library and added signing support
+
+```bash
+composer require vatsake/mobile-id-php-client
+```
+
+```php
+use Sk\Mid\DisplayTextFormat;
+use Sk\Mid\Language\ENG;
+use Sk\Mid\MobileIdClient;
+use Sk\Mid\MobileIdSignatureHashToSign;
+use Sk\Mid\Rest\Dao\Request\CertificateRequest;
+use Sk\Mid\Rest\Dao\Request\SignatureRequest;
+use Vatsake\AsicE\AsiceConfig;
+use Vatsake\AsicE\Container\Container;
+use Vatsake\AsicE\Container\UnsignedContainer;
+use Vatsake\AsicE\Crypto\SignAlg;
+
+AsiceConfig::setTsaUrl('http://tsa.demo.sk.ee/tsa');
+
+# Mobile ID client
+$client = MobileIdClient::newBuilder()
+    ->withRelyingPartyUUID('00000000-0000-0000-0000-000000000000')
+    ->withRelyingPartyName('DEMO')
+    ->withLongPollingTimeoutSeconds(60)
+    ->withHostUrl('https://tsp.demo.sk.ee/mid-api')
+    ->build();
+
+# Create container and add file
+$uc = new UnsignedContainer();
+$uc->addFile('foo.txt', 'bar');
+$container = $uc->build(__DIR__ . '/foobar.asice');
+
+# Get the signing certificate
+$request = CertificateRequest::newBuilder()
+    ->withPhoneNumber('+37200000766')
+    ->withNationalIdentityNumber('60001019906')
+    ->build();
+
+try {
+    $resp = $client->getMobileIdConnector()->pullCertificate($request);
+} catch (\Exception $e) {
+    var_dump($e);
+    exit;
+    // Check official documentation to catch all exceptions
+}
+
+# Get data to be signed
+$builder = $container->createSignature();
+$dataToBeSigned = $builder
+    ->setSigner($resp->getCert()) // PEM certificate
+    ->setSignatureAlg(SignAlg::ECDSA_SHA256) // MOBILE-ID uses ECDSA algorithm
+    ->setSignatureProductionPlace('Tallinn', 'Harjumaa', 99999, 'EE') // (optional)
+    ->setSignerRoles(['Agreed']) // (optional)
+    ->getDataToBeSigned();
+// Might need to save builder instance
+file_put_contents('temp', serialize($builder));
+
+$hash = MobileIdSignatureHashToSign::newBuilder()->withHashInBase64($dataToBeSigned)->withHashType('sha256')->build();
+$verificationCode = $hash->calculateVerificationCode(); // Show this to user
+
+# Sign data via Mobile-id
+
+$request = SignatureRequest::newBuilder()
+    ->withPhoneNumber('+37200000766')
+    ->withNationalIdentityNumber('60001019906')
+    ->withHashToSign($hash)
+    ->withLanguage(ENG::asType())
+    ->withDisplayText("Sign document?")
+    ->withDisplayTextFormat(DisplayTextFormat::GSM7)
+    ->build();
+
+try {
+    $response = $client->getMobileIdConnector()->initSignature($request);
+} catch (\Exception $e) { // Use exceptions below
+    var_dump($e);
+    exit;
+    // Check official documentation to catch all exceptions
+}
+
+# Poll until final result
+$finalSessionStatus = $client
+    ->getSessionStatusPoller()
+    ->fetchFinalSignatureSessionStatus($response->getSessionID(), 60);
+
+try {
+    $result = $client->createMobileIdSignature($finalSessionStatus, $hash);
+} catch (\Exception $e) {
+    var_dump($e);
+    exit;
+    // Check official documentation to catch all exceptions
+}
+
+// Attach signature
+/** @var \Vatsake\AsicE\Container\Signature\SignatureBuilder */
+$signature = unserialize(file_get_contents('temp'));
+$finalizedSignature = $signature->finalize($result->getSignatureValueInBase64());
 $container = Container::open(__DIR__ . '/foobar.asice');
 $container->addSignature($finalizedSignature);
 ```
