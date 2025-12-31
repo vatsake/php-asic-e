@@ -89,7 +89,7 @@ use Vatsake\AsicE\AsiceConfig;
 use Vatsake\AsicE\Container\Container;
 use Vatsake\AsicE\Container\UnsignedContainer;
 use Vatsake\AsicE\Crypto\SignAlg;
-use Sk\SmartId\Api\Data\SignableData;
+use Sk\SmartId\Api\Data\SignatureHash;
 use Sk\SmartId\Api\Data\SemanticsIdentifier;
 use Sk\SmartId\Api\Data\Interaction;
 use Sk\SmartId\Client;
