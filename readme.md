@@ -52,7 +52,7 @@ AsiceConfig::setLogger($logger);
 <?php
 use Vatsake\AsicE\AsiceConfig;
 use Vatsake\AsicE\Container\Container;
-use Vatsake\AsicE\Container\UnsignedContainer;
+use Vatsake\AsicE\Container\ContainerBuilder;
 use Vatsake\AsicE\Crypto\SignAlg;
 
 // Configure TSA (and OCSP) endpoints
@@ -61,7 +61,7 @@ AsiceConfig::setOcspUrl(/* OCSP URL */)
     ->setTsaUrl(/* TSA URL */);
 
 // 1a: Create a new ASiC-E container
-$uc = new UnsignedContainer();
+$uc = new ContainerBuilder();
 $uc->addFile('foo.txt', 'bar');
 $container = $uc->build(__DIR__ . '/foobar.asice'); // Writes to disk
 
@@ -107,7 +107,7 @@ composer require vatsake/smart-id-php-client
 ```php
 use Vatsake\AsicE\AsiceConfig;
 use Vatsake\AsicE\Container\Container;
-use Vatsake\AsicE\Container\UnsignedContainer;
+use Vatsake\AsicE\Container\ContainerBuilder;
 use Vatsake\AsicE\Crypto\SignAlg;
 use Sk\SmartId\Api\Data\SignatureHash;
 use Sk\SmartId\Api\Data\SemanticsIdentifier;
@@ -123,7 +123,7 @@ $client->setRelyingPartyUUID('00000000-0000-0000-0000-000000000000')
   ->setHostUrl('https://sid.demo.sk.ee/smart-id-rp/v2/');
 
 # Create container and add file
-$uc = new UnsignedContainer();
+$uc = new ContainerBuilder();
 $uc->addFile('foo.txt', 'bar');
 $container = $uc->build(__DIR__ . '/foobar.asice');
 
@@ -201,7 +201,7 @@ use Sk\Mid\Rest\Dao\Request\CertificateRequest;
 use Sk\Mid\Rest\Dao\Request\SignatureRequest;
 use Vatsake\AsicE\AsiceConfig;
 use Vatsake\AsicE\Container\Container;
-use Vatsake\AsicE\Container\UnsignedContainer;
+use Vatsake\AsicE\Container\ContainerBuilder;
 use Vatsake\AsicE\Crypto\SignAlg;
 
 AsiceConfig::setTsaUrl('http://tsa.demo.sk.ee/tsa');
@@ -215,7 +215,7 @@ $client = MobileIdClient::newBuilder()
     ->build();
 
 # Create container and add file
-$uc = new UnsignedContainer();
+$uc = new ContainerBuilder();
 $uc->addFile('foo.txt', 'bar');
 $container = $uc->build(__DIR__ . '/foobar.asice');
 

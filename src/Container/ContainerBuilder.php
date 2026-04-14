@@ -1,17 +1,12 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Vatsake\AsicE\Container;
 
 use Psr\Log\LoggerInterface;
 use Vatsake\AsicE\AsiceConfig;
 use Vatsake\AsicE\Exceptions\ContainerAlreadyFinalized;
 
-/**
- * Creates an ASiC-E container without any signatures
- */
-final class UnsignedContainer
+final class ContainerBuilder
 {
     private ?LoggerInterface $logger = null;
     private bool $sealed = false;
