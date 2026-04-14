@@ -23,11 +23,6 @@ final class Lotl extends Container
 {
     private const LOTL_URL = 'https://ec.europa.eu/tools/lotl/eu-lotl.xml';
 
-    /**
-     * @var string[] PEM-encoded CA certs; sadly X509 doesn't expose method to list loaded CAs
-     * Moved to AsiceConfig - see getLotl()/setLotl() there
-     */
-    //private array $trustedList = [];
     private null|string $lastLotlLoaded = null;
 
     /** @var string[] sha256(DER) fingerprints of the loaded CAs */
