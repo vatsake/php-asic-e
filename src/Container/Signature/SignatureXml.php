@@ -9,6 +9,8 @@ use DateTimeImmutable;
 use DOMDocument;
 use DOMElement;
 use DOMNode;
+use Psr\Log\LoggerInterface;
+use Vatsake\AsicE\AsiceConfig;
 use Vatsake\AsicE\Common\Utils;
 use Vatsake\AsicE\Crypto\CanonicalizationMethod;
 use Vatsake\AsicE\Crypto\DigestAlg;
@@ -26,18 +28,24 @@ final class SignatureXml
     private string $id;
 
     private ?DOMDocument $doc = null;
+    private ?LoggerInterface $logger = null;
 
     public function __construct(null|string $xml = null)
     {
+        $this->logger = AsiceConfig::getLogger();
+        $this->logger?->debug('signature_xml.construct.start', ['hasXml' => (bool) $xml]);
+
         if (!$xml) {
             $this->id = 'id-' . bin2hex(random_bytes(14));
             $this->createBase();
+            $this->logger?->info('signature_xml.construct.created_base', ['signatureId' => $this->id]);
         } else {
             $this->doc = new DOMDocument('1.0', 'UTF-8');
             $this->doc->preserveWhiteSpace = true;
             $this->doc->formatOutput = false;
 
             if (!$this->doc->loadXML($xml)) {
+                $this->logger?->warning('signature_xml.construct.invalid_xml');
                 throw new InvalidSignatureXml('Invalid XML provided');
             }
 
@@ -49,6 +57,7 @@ final class SignatureXml
 
             $sig = $this->doc->getElementsByTagName('Signature')->item(0);
             $this->id = $sig->getAttribute('Id');
+            $this->logger?->info('signature_xml.construct.loaded_existing', ['signatureId' => $this->id]);
         }
     }
 
@@ -163,8 +172,10 @@ final class SignatureXml
 
         $method = SignAlg::tryFrom($signUrl);
         if (!$method) {
+            $this->logger?->warning('signature_xml.invalid_signature_method', ['signatureId' => $this->id, 'algorithmUrl' => $signUrl]);
             throw new InvalidSignatureXml("Unknown signature method: $signUrl");
         }
+        $this->logger?->debug('signature_xml.signature_method.resolved', ['signatureId' => $this->id, 'algorithmUrl' => $signUrl]);
         return $method;
     }
 
@@ -196,8 +207,10 @@ final class SignatureXml
 
         $digest = DigestAlg::fromUrl($digestUrl);
         if (!$digest) {
+            $this->logger?->warning('signature_xml.invalid_digest_method', ['signatureId' => $this->id, 'algorithmUrl' => $digestUrl]);
             throw new InvalidSignatureXml("Unknown digest method: $digestUrl");
         }
+        $this->logger?->debug('signature_xml.digest_method.resolved', ['signatureId' => $this->id, 'algorithmUrl' => $digestUrl]);
         return $digest;
     }
 
@@ -294,13 +307,22 @@ final class SignatureXml
      */
     public function createSignedProperties(string $signerCertificate, int $numOfFiles, array $productionPlace = [], array $signerRoles = []): DOMElement
     {
+        $this->logger?->info('signature_xml.signed_properties.start', [
+            'signatureId' => $this->id,
+            'numOfFiles' => $numOfFiles,
+            'signerRolesCount' => count($signerRoles),
+            'hasProductionPlace' => count(array_filter($productionPlace, static fn($value): bool => $value !== null)) > 0,
+        ]);
+
         if ($this->doc->getElementsByTagName('Object')->count() > 0) {
+            $this->logger?->warning('signature_xml.signed_properties.already_created', ['signatureId' => $this->id]);
             throw new \RuntimeException('Signed properties already created');
         }
 
         $signingTime = new DateTime('now', new \DateTimeZone('UTC'));
         $signerCert = openssl_x509_parse($signerCertificate);
         if ($signerCert === false) {
+            $this->logger?->warning('signature_xml.signed_properties.invalid_certificate', ['signatureId' => $this->id]);
             throw new InvalidCertificateException('Invalid certificate, is it in base64 format?', $signerCertificate);
         }
 
@@ -386,6 +408,12 @@ final class SignatureXml
             $mime = $this->doc->createElementNS(self::NS_XADES, 'xades:MimeType', 'application/octet-stream');
             $dof->appendChild($mime);
         }
+
+        $this->logger?->info('signature_xml.signed_properties.completed', [
+            'signatureId' => $this->id,
+            'numOfFiles' => $numOfFiles,
+        ]);
+
         return $sp;
     }
 
@@ -394,7 +422,15 @@ final class SignatureXml
      */
     public function createSignedInfo(array $fileDigests, SignAlg $signAlg, DigestAlg $signedPropertiesDigestAlg)
     {
+        $this->logger?->info('signature_xml.signed_info.start', [
+            'signatureId' => $this->id,
+            'fileRefCount' => count($fileDigests),
+            'signAlg' => $signAlg->getDigestName(),
+            'signedPropertiesDigestAlg' => $signedPropertiesDigestAlg->value,
+        ]);
+
         if ($this->doc->getElementsByTagName('SignedInfo')->count() > 0) {
+            $this->logger?->warning('signature_xml.signed_info.already_created', ['signatureId' => $this->id]);
             throw new \RuntimeException('Signed info already created');
         }
 
@@ -430,6 +466,11 @@ final class SignatureXml
             $i++;
         }
 
+        $this->logger?->debug('signature_xml.signed_info.file_refs_created', [
+            'signatureId' => $this->id,
+            'fileRefCount' => $i,
+        ]);
+
         // Signed props ref
         $ref = $this->doc->createElementNS(self::NS_DS, 'ds:Reference');
         $ref->setAttribute('Id', $this->id . '-RefId' . $i);
@@ -453,11 +494,21 @@ final class SignatureXml
         $dv = $this->doc->createElementNS(self::NS_DS, 'ds:DigestValue', $signedPropDigestValue);
         $ref->append($dv);
 
+        $this->logger?->info('signature_xml.signed_info.completed', [
+            'signatureId' => $this->id,
+        ]);
+
         return $si;
     }
 
     public function createSignatureAndSignerValues(string $signatureValue, string $signerCertificate)
     {
+        $this->logger?->info('signature_xml.signature_and_signer_values.start', [
+            'signatureId' => $this->id,
+            'signatureValueLength' => strlen($signatureValue),
+            'certificateLength' => strlen($signerCertificate),
+        ]);
+
         $obj = $this->doc->getElementsByTagName('Object')->item(0);
 
         $sv = $this->doc->createElementNS(self::NS_DS, 'ds:SignatureValue', $signatureValue);
@@ -473,10 +524,21 @@ final class SignatureXml
 
         $cert = $this->doc->createElementNS(self::NS_DS, 'ds:X509Certificate', Utils::removePemFormatting($signerCertificate));
         $x509Data->appendChild($cert);
+
+        $this->logger?->info('signature_xml.signature_and_signer_values.completed', [
+            'signatureId' => $this->id,
+        ]);
     }
 
     public function createUnsignedProperties(string $issuerCertificate, string $timestampToken, string $ocspToken)
     {
+        $this->logger?->info('signature_xml.unsigned_properties.start', [
+            'signatureId' => $this->id,
+            'issuerCertificateLength' => strlen($issuerCertificate),
+            'timestampTokenLength' => strlen($timestampToken),
+            'ocspTokenLength' => strlen($ocspToken),
+        ]);
+
         $qp = $this->doc->getElementsByTagName('QualifyingProperties')->item(0);
 
         $up = $this->doc->createElementNS(self::NS_XADES, 'xades:UnsignedProperties');
@@ -513,6 +575,10 @@ final class SignatureXml
 
         $eocspv = $this->doc->createElementNS(self::NS_XADES, 'xades:EncapsulatedOCSPValue', $ocspToken);
         $ocspv->appendChild($eocspv);
+
+        $this->logger?->info('signature_xml.unsigned_properties.completed', [
+            'signatureId' => $this->id,
+        ]);
     }
 
     /**

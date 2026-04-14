@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vatsake\AsicE;
 
+use Psr\Log\LoggerInterface;
+
 /**
  * Singleton container for ASiC-E configuration values.
  *
@@ -20,6 +22,7 @@ final class AsiceConfig extends Container
     private ?string $tsaUrl = null;
     private ?string $ocspUrl = null;
     private ?string $countryCode = null;
+    private ?LoggerInterface $logger = null;
     private array $lotl = [];
 
     public static function getTsaUrl(): ?string
@@ -70,8 +73,20 @@ final class AsiceConfig extends Container
         return $instance;
     }
 
+    public static function getLogger(): ?LoggerInterface
+    {
+        return self::getInstance()->logger;
+    }
+
+    public static function setLogger(?LoggerInterface $logger): self
+    {
+        $instance = self::getInstance();
+        $instance->logger = $logger;
+        return $instance;
+    }
+
     /**
-     * @param array{tsaUrl?: string, ocspUrl?: string, lotlCountryCode?: string, lotl?: array<string>} $cfg
+     * @param array{tsaUrl?: string, ocspUrl?: string, lotlCountryCode?: string, lotl?: array<string>, logger?: LoggerInterface} $cfg
      */
     public static function fromArray(array $cfg)
     {
@@ -80,5 +95,6 @@ final class AsiceConfig extends Container
         $self->ocspUrl = $cfg['ocspUrl'] ?? null;
         $self->countryCode = $cfg['lotlCountryCode'] ?? null;
         $self->lotl = $cfg['lotl'] ?? [];
+        $self->logger = $cfg['logger'] ?? null;
     }
 }

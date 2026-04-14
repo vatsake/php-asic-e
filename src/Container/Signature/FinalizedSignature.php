@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vatsake\AsicE\Container\Signature;
 
+use Psr\Log\LoggerInterface;
+use Vatsake\AsicE\AsiceConfig;
 use Vatsake\AsicE\Api\Ocsp\OcspResponse;
 use Vatsake\AsicE\Api\Tsa\TimestampToken;
 use Vatsake\AsicE\Crypto\DigestAlg;
@@ -15,6 +17,7 @@ use Vatsake\AsicE\Validation\ValidationResult;
 final class FinalizedSignature
 {
     private array $validationErrors = [];
+    private ?LoggerInterface $logger = null;
 
     /**
      * @param SignatureXml $xml
@@ -22,6 +25,8 @@ final class FinalizedSignature
      */
     public function __construct(private SignatureXml $signatureXml, private array $realFileDigests)
     {
+        $this->logger = AsiceConfig::getLogger();
+        $this->logger?->debug('finalized_signature.construct');
     }
 
     public function toXml(): string
@@ -34,11 +39,19 @@ final class FinalizedSignature
      */
     private function validateOcsp(): array
     {
+        $startedAt = microtime(true);
+        $this->logger?->debug('finalized_signature.validate_ocsp.start');
+
         $ocspResponse = new OcspResponse(base64_decode($this->signatureXml->getOcspToken()));
         $basicResponse = $ocspResponse->getBasicResponse();
 
         $ocspValidator = new OcspValidator();
         $result = $ocspValidator->validate($basicResponse, $this->signatureXml);
+
+        $this->logger?->debug('finalized_signature.validate_ocsp.completed', [
+            'durationMs' => (int) round((microtime(true) - $startedAt) * 1000),
+        ]);
+
         return $result;
     }
 
@@ -47,17 +60,33 @@ final class FinalizedSignature
      */
     private function validateTsa(): array
     {
+        $startedAt = microtime(true);
+        $this->logger?->debug('finalized_signature.validate_tsa.start');
+
         $token = new TimestampToken(base64_decode($this->signatureXml->getTimestampToken()));
 
         $tsaValidator = new TsaValidator();
         $result = $tsaValidator->validate($token, $this->signatureXml);
+
+        $this->logger?->debug('finalized_signature.validate_tsa.completed', [
+            'durationMs' => (int) round((microtime(true) - $startedAt) * 1000),
+        ]);
+
         return $result;
     }
 
     private function validateSignature()
     {
+        $startedAt = microtime(true);
+        $this->logger?->debug('finalized_signature.validate_signature.start');
+
         $validator = new SignatureValidator();
         $result = $validator->validate($this->signatureXml, $this->realFileDigests);
+
+        $this->logger?->debug('finalized_signature.validate_signature.completed', [
+            'durationMs' => (int) round((microtime(true) - $startedAt) * 1000),
+        ]);
+
         return $result;
     }
 
@@ -66,6 +95,9 @@ final class FinalizedSignature
      */
     public function isValid(): bool
     {
+        $startedAt = microtime(true);
+        $this->logger?->info('finalized_signature.is_valid.start');
+
         $results = [...$this->validateTsa(), ...$this->validateOcsp(), ...$this->validateSignature()];
 
         $this->validationErrors = [];
@@ -75,7 +107,15 @@ final class FinalizedSignature
             }
         }
 
-        return sizeof($this->validationErrors) === 0;
+        $isValid = sizeof($this->validationErrors) === 0;
+
+        $this->logger?->info('finalized_signature.is_valid.completed', [
+            'isValid' => $isValid,
+            'invalidCount' => count($this->validationErrors),
+            'durationMs' => (int) round((microtime(true) - $startedAt) * 1000),
+        ]);
+
+        return $isValid;
     }
 
     /**

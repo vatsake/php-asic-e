@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vatsake\AsicE\Container\Signature;
 
+use Psr\Log\LoggerInterface;
 use Vatsake\AsicE\Api\Ocsp\OcspClient;
 use Vatsake\AsicE\Api\Ocsp\OcspRequest;
 use Vatsake\AsicE\Api\Tsa\TsaClient;
@@ -32,12 +33,14 @@ final class SignatureBuilder
     private SignAlg $signatureAlg = SignAlg::ECDSA_SHA256;
 
     private ?SignatureXml $xmlWriter = null;
+    private ?LoggerInterface $logger = null;
 
     /**
      * @param array<string, array{0: DigestAlg, 1: string}> $fileDigests
      */
     public function __construct(private array $fileDigests)
     {
+        $this->logger = AsiceConfig::getLogger();
         $this->xmlWriter = new SignatureXml();
     }
 
@@ -123,7 +126,16 @@ final class SignatureBuilder
      */
     public function getDataToBeSigned(bool $raw = false): string
     {
+        $startedAt = microtime(true);
+        $this->logger?->info('signature_builder.get_data_to_be_signed.start', [
+            'fileDigestCount' => count($this->fileDigests),
+            'signatureAlg' => $this->signatureAlg->getDigestName(),
+            'signedPropertiesDigestAlg' => $this->signedPropertiesDigestAlg->value,
+            'raw' => $raw,
+        ]);
+
         if (empty($this->signerCertificate)) {
+            $this->logger?->warning('signature_builder.get_data_to_be_signed.signer_not_set');
             throw new \RuntimeException('Cannot get data to be signed: signer certificate not set');
         }
 
@@ -132,9 +144,22 @@ final class SignatureBuilder
 
         $xml = $this->xmlWriter->getSignedInfoCanonicalized();
         if ($raw) {
+            $this->logger?->info('signature_builder.get_data_to_be_signed.completed', [
+                'raw' => true,
+                'outputLength' => strlen($xml),
+                'durationMs' => (int) round((microtime(true) - $startedAt) * 1000),
+            ]);
             return $xml;
         }
-        return base64_encode(hash($this->signatureAlg->getDigestName(), $xml, true));
+
+        $output = base64_encode(hash($this->signatureAlg->getDigestName(), $xml, true));
+        $this->logger?->info('signature_builder.get_data_to_be_signed.completed', [
+            'raw' => false,
+            'outputLength' => strlen($output),
+            'durationMs' => (int) round((microtime(true) - $startedAt) * 1000),
+        ]);
+
+        return $output;
     }
 
     /**
@@ -143,6 +168,11 @@ final class SignatureBuilder
      */
     public function finalize(string $signatureValue): FinalizedSignature
     {
+        $startedAt = microtime(true);
+        $this->logger?->info('signature_builder.finalize.start', [
+            'signatureValueLength' => strlen($signatureValue),
+        ]);
+
         $this->xmlWriter->createSignatureAndSignerValues($signatureValue, $this->signerCertificate);
 
         $signatureValueXml = $this->xmlWriter->getSignatureValueCanonicalized();
@@ -152,30 +182,65 @@ final class SignatureBuilder
         $ocspToken = $this->generateOcspToken($this->signerCertificate, $issuerCertificate);
 
         $this->xmlWriter->createUnsignedProperties(Utils::removePemFormatting($issuerCertificate), $timestampToken, $ocspToken);
+
+        $this->logger?->info('signature_builder.finalize.completed', [
+            'timestampTokenLength' => strlen($timestampToken),
+            'ocspTokenLength' => strlen($ocspToken),
+            'durationMs' => (int) round((microtime(true) - $startedAt) * 1000),
+        ]);
+
         return new FinalizedSignature($this->xmlWriter, $this->fileDigests);
     }
 
     private function generateTimestampToken(string $signatureValueNodeCanonicalized): string
     {
+        $startedAt = microtime(true);
         $url = AsiceConfig::getTsaUrl();
         if (!$url) {
+            $this->logger?->warning('signature_builder.generate_timestamp_token.tsa_url_not_configured');
             throw new ConfigParameterNotSet('TSA URL not configured');
         }
 
+        $this->logger?->debug('signature_builder.generate_timestamp_token.start', [
+            'tsaHost' => parse_url($url, PHP_URL_HOST) ?: null,
+        ]);
+
         $request = new TsaRequest($url, $signatureValueNodeCanonicalized);
         $token = (new TsaClient())->sendRequest($request)->getTimestampToken();
+
+        $this->logger?->debug('signature_builder.generate_timestamp_token.completed', [
+            'tokenLength' => strlen($token),
+            'durationMs' => (int) round((microtime(true) - $startedAt) * 1000),
+        ]);
+
         return $token;
     }
 
     private function generateOcspToken(string $signerCert, string $issuerCert): string
     {
-        if (AsiceConfig::getOcspUrl()) {
-            $url = AsiceConfig::getOcspUrl();
+        $startedAt = microtime(true);
+        $ocspFromConfig = AsiceConfig::getOcspUrl();
+        if ($ocspFromConfig) {
+            $url = $ocspFromConfig;
+            $urlSource = 'config';
         } else {
             $url = Utils::getOcspUrlFromCert($signerCert);
+            $urlSource = 'certificate';
         }
+
+        $this->logger?->debug('signature_builder.generate_ocsp_token.start', [
+            'urlSource' => $urlSource,
+            'ocspHost' => parse_url($url, PHP_URL_HOST) ?: null,
+        ]);
+
         $request = new OcspRequest($url, $signerCert, $issuerCert);
         $token = (new OcspClient())->sendRequest($request)->getToken();
+
+        $this->logger?->debug('signature_builder.generate_ocsp_token.completed', [
+            'tokenLength' => strlen($token),
+            'durationMs' => (int) round((microtime(true) - $startedAt) * 1000),
+        ]);
+
         return $token;
     }
 

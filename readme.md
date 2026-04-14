@@ -6,7 +6,7 @@
 
 A lightweight PHP library for creating and validating **ASiC-E** (Associated Signature Container – Extended) files with **XAdES-T** digital signatures.
 
-## ✨ Features
+## Features
 
 - Create **XAdES-T** (timestamped) signatures
 - Build and validate **ASiC-E** digital signature containers
@@ -18,7 +18,7 @@ The library currently produces XAdES-T signatures (BES + trusted timestamp + OCS
 Long-term profiles (XAdES-LT / LTA) are not yet implemented.
 </blockquote>
 
-## 🧩 Installation
+## Installation
 
 Install via Composer:
 
@@ -26,7 +26,27 @@ Install via Composer:
 composer require vatsake/php-asic-e
 ```
 
-## 🚀 Usage
+## Configuring logging
+
+Logging is optional. Pass any PSR-3 compatible logger to `AsiceConfig::setLogger()` to enable it. Example with Monolog:
+
+```bash
+composer require monolog/monolog
+```
+
+```php
+use Vatsake\AsicE\AsiceConfig;
+use Monolog\Handler\StreamHandler;
+use Monolog\Level;
+use Monolog\Logger;
+
+$logger = new Logger('test_log');
+$logger->pushHandler(new StreamHandler(__DIR__ . '/log.log', Level::Debug));
+
+AsiceConfig::setLogger($logger);
+```
+
+## Usage
 
 ```php
 <?php
@@ -76,7 +96,7 @@ $container = Container::open(__DIR__ . '/foobar.asice');
 $container->addSignature($finalizedSignature);
 ```
 
-### 🚀 Signing example with Smart-ID client library
+### Signing example with Smart-ID client library
 
 Unfortunately the base Smart-id client doesn't support signing, so I forked the base library and added signing support
 
@@ -164,7 +184,7 @@ $container = Container::open(__DIR__ . '/foobar.asice');
 $container->addSignature($finalizedSignature);
 ```
 
-### 🚀 Signing example with Mobile-ID client library
+### Signing example with Mobile-ID client library
 
 Unfortunately the base Mobile-id client doesn't support signing, so I forked the base library and added signing support
 
@@ -267,7 +287,7 @@ $container = Container::open(__DIR__ . '/foobar.asice');
 $container->addSignature($finalizedSignature);
 ```
 
-## ✅ Validating signatures
+## Validating signatures
 
 ```php
 use Vatsake\AsicE\Container\Container;
@@ -289,7 +309,7 @@ foreach ($container->getSignatures() as $i => $sig) {
 }
 ```
 
-## 🔗 Official SK ID Solutions Endpoints & Docs
+## Official SK ID Solutions Endpoints & Docs
 
 For full technical information about Estonian OCSP and TSA services, see:
 
@@ -315,7 +335,7 @@ These public endpoints are operated by SK ID Solutions AS (Estonia) and are used
 Signatures created with them are fully compatible with DigiDoc4.
 </blockquote>
 
-## ⚙️ Best practices
+## Best practices
 
 Load the **LOTL** (List of Trusted Lists) once on startup and cache it to avoid network delays.<br>
 It is recommended to update LOTL every 24h.
@@ -342,14 +362,14 @@ AsiceConfig::setLotl($lotl)
 which can slow initialization and increase memory use.
 </blockquote>
 
-## 🧱 Requirements
+## Requirements
 
 - PHP 8.1 or higher
 - phpseclib 3 (used internally for ASN.1, OCSP, and TSA parsing)
 - OpenSSL extension enabled
 - DOM and XML extensions
 
-## 🧠 Technical notes
+## Technical notes
 
 - Implements the **ETSI EN 319 162 / XAdES-T** profile (BES + timestamp + OCSP),
   identical in structure to DigiDoc’s “BES / time-stamp” signatures.
