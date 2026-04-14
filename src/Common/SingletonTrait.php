@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Vatsake\AsicE;
+namespace Vatsake\AsicE\Common;
 
-abstract class Container
+trait SingletonTrait
 {
     private static $instances = [];
 
@@ -17,9 +17,7 @@ abstract class Container
         return self::$instances[$class];
     }
 
-    protected function __clone()
-    {
-    }
+    protected function __clone() {}
 
     public function __wakeup()
     {
