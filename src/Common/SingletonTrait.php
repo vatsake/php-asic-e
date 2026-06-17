@@ -17,7 +17,9 @@ trait SingletonTrait
         return self::$instances[$class];
     }
 
-    protected function __clone() {}
+    protected function __clone()
+    {
+    }
 
     public function __wakeup()
     {

@@ -103,7 +103,7 @@ abstract class Utils
 
     public static function stripBr(string $str): string
     {
-        return str_replace(["\n", "\n"], [''], $str);
+        return str_replace(["\r", "\n"], '', $str);
     }
 
     // Returns serial number as integer string
@@ -129,7 +129,7 @@ abstract class Utils
                 return '0';
             }
             $bi = new BigInteger($hex, 16);
-            return $bi->toString(10);
+            return $bi->toString();
         }
 
         if (!preg_match('/^\d+$/', $s)) {

@@ -18,7 +18,9 @@ use Vatsake\AsicE\Container\Signature\SignatureXml;
  */
 class SignatureValueValidator implements Validator
 {
-    public function __construct(private SignatureXml $xml) {}
+    public function __construct(private SignatureXml $xml)
+    {
+    }
 
     public function validate(): ValidationResult
     {
@@ -51,7 +53,7 @@ class SignatureValueValidator implements Validator
                 return new ValidationResult(true);
             }
 
-            if ($result < 1) {
+            if ($result === -1 || $result === false) {
                 $sslError = openssl_error_string();
             }
         }

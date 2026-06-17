@@ -130,7 +130,7 @@ final class Lotl
     private function loadLotl(): array
     {
         $lotlXml = $this->httpClient->get(self::LOTL_URL);
-        if ($lotlXml === false) {
+        if ($lotlXml === '') {
             throw new \RuntimeException('Failed to download EU LOTL.');
         }
         $xml = new \SimpleXMLElement($lotlXml, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
