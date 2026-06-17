@@ -78,7 +78,6 @@ class ZipWriterTest extends TestCase
 
         try {
             $reflectionClass = new \ReflectionClass(ZipWriter::class);
-            $reflectionClass->getProperty('zip')->setAccessible(true);
 
             $zip = ZipWriter::createNew($tempPath);
             $this->assertEquals('', $reflectionClass->getProperty('zip')->getValue($zip)->filename);

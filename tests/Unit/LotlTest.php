@@ -138,7 +138,6 @@ class LotlTest extends TestCase
     private function getPrivateProperty($object, $property)
     {
         $ref = new \ReflectionProperty($object, $property);
-        $ref->setAccessible(true);
         return $ref->getValue($object);
     }
 }
