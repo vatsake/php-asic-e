@@ -4,18 +4,18 @@
 [![License](https://img.shields.io/github/license/vatsake/php-asic-e.svg)](LICENSE)
 [![PHP](https://img.shields.io/badge/php-%3E%3D%208.1-blue.svg)]()
 
-A lightweight PHP library for creating and validating **ASiC-E** (Associated Signature Container – Extended) files with **XAdES-T** digital signatures.
+A lightweight PHP library for creating and validating **ASiC-E** (Associated Signature Container – Extended) files with **XAdES-LT** digital signatures.
 
 ## Features
 
-- Create **XAdES-T** (timestamped) signatures
+- Create **XAdES-LT** (long-term with timestamp) signatures
 - Build and validate **ASiC-E** digital signature containers
 - Built-in **OCSP** and **timestamp** support
 - Certificate chain and signature validation
 - **ASN.1** (powered by phpseclib 3) and **XML** utilities
 <blockquote>
-The library currently produces XAdES-T signatures (BES + trusted timestamp + OCSP).<br>
-Long-term profiles (XAdES-LT / LTA) are not yet implemented.
+The library currently produces XAdES-LT signatures.<br>
+Long-term profiles (XAdES-LTA) are not yet implemented.
 </blockquote>
 
 ## Installation
@@ -55,10 +55,11 @@ use Vatsake\AsicE\Container\Container;
 use Vatsake\AsicE\Container\ContainerBuilder;
 use Vatsake\AsicE\Crypto\SignAlg;
 
-// Configure TSA (and OCSP) endpoints
+// Configure TSA endpoint
+// And OCSP if you'd want
 // If setting OCSP endpoint here, it will only use that endpoint
-AsiceConfig::setOcspUrl(/* OCSP URL */)
-    ->setTsaUrl(/* TSA URL */);
+AsiceConfig::setTsaUrl(/* TSA URL */)
+    ->setOcspUrl(/* OCSP URL */);
 
 // 1a: Create a new ASiC-E container
 $uc = new ContainerBuilder();
@@ -371,13 +372,13 @@ which can slow initialization and increase memory use.
 
 ## Technical notes
 
-- Implements the **ETSI EN 319 162 / XAdES-T** profile (BES + timestamp + OCSP),
-  identical in structure to DigiDoc’s “BES / time-stamp” signatures.
+- Implements an **ETSI EN 319 162 XAdES-LT style** profile
+  (XAdES-T signature + embedded certificate/revocation values).
 - Uses **phpseclib 3** for:
   - ASN.1 DER decoding
   - OCSP and TSA response parsing
   - Certificate and key handling where OpenSSL alone is insufficient
-- Long-term (LT/LTA) and archival timestamping are planned for future versions.
+- Archival timestamping (**XAdES-LTA**) is planned for future versions.
 - Fully compatible with **Estonian DigiDoc** — DigiDoc will display these as<br>
   **“BES / time-stamp“ (XAdES-T)** signatures
 
