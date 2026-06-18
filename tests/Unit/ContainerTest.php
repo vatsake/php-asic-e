@@ -10,7 +10,7 @@ use Vatsake\AsicE\Container\Container;
 use Vatsake\AsicE\Container\Signature\FinalizedSignature;
 use Vatsake\AsicE\Container\Signature\SignatureBuilder;
 use Vatsake\AsicE\Container\Signature\SignatureXml;
-use Vatsake\AsicE\Container\UnsignedContainer;
+use Vatsake\AsicE\Container\ContainerBuilder;
 use Vatsake\AsicE\Crypto\DigestAlg;
 use Vatsake\AsicE\Exceptions\EmptyContainerException;
 use Vatsake\AsicE\Validation\Lotl;
@@ -21,11 +21,11 @@ class ContainerTest extends TestCase
     private const TEST_TRUSTED_X509_PATH = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'Certs' . DIRECTORY_SEPARATOR . 'signer.crt';
     private const SIGNED_CONTAINER_PATH = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'TestFiles' . DIRECTORY_SEPARATOR . 'signed.asice';
 
-    private function makeUnsignedContainerWithFiles(array $files): string
+    private function makeContainerBuilderWithFiles(array $files): string
     {
         $tmpPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . uniqid('', true) . '.asice';
 
-        $uc = new UnsignedContainer();
+        $uc = new ContainerBuilder();
         foreach ($files as $name => $contents) {
             $uc->addFile($name, $contents);
         }
@@ -35,7 +35,7 @@ class ContainerTest extends TestCase
 
     public function testCreateSignatureReturnsBuilderAndDataToBeSigned()
     {
-        $zipPath = $this->makeUnsignedContainerWithFiles([
+        $zipPath = $this->makeContainerBuilderWithFiles([
             'a.txt' => 'AAA',
         ]);
 
@@ -62,7 +62,7 @@ class ContainerTest extends TestCase
 
     public function testAddSignatureCreatesUniqueNames(): void
     {
-        $zipPath = $this->makeUnsignedContainerWithFiles([
+        $zipPath = $this->makeContainerBuilderWithFiles([
             'doc1.txt' => 'hello',
         ]);
 
@@ -96,7 +96,7 @@ class ContainerTest extends TestCase
 
     public function testCreateSignatureOnEmptyDatafilesContainer(): void
     {
-        $containerPath = $this->makeUnsignedContainerWithFiles([]);
+        $containerPath = $this->makeContainerBuilderWithFiles([]);
         try {
             $container = Container::open($containerPath);
             $this->expectException(EmptyContainerException::class);

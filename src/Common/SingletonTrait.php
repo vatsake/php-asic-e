@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Vatsake\AsicE;
+namespace Vatsake\AsicE\Common;
 
-abstract class Container
+trait SingletonTrait
 {
     private static $instances = [];
 

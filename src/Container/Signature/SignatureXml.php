@@ -87,11 +87,11 @@ final class SignatureXml
     public function getSignedPropSignerDigestAlg(): DigestAlg
     {
         $digestUrl = $this->doc->getElementsByTagName('SigningCertificate')->item(0)->getElementsByTagName('DigestMethod')->item(0)->getAttribute('Algorithm');
-        $digestAlg = DigestAlg::fromUrl($digestUrl);
-        if (!$digestAlg) {
+        try {
+            return DigestAlg::fromUrl($digestUrl);
+        } catch (\InvalidArgumentException) {
             throw new InvalidSignatureXml("Unknown signature digest method: $digestUrl");
         }
-        return $digestAlg;
     }
 
     public function getSignedPropSignerDigest(): string
@@ -189,8 +189,8 @@ final class SignatureXml
         }
 
         return $sp->C14N(
-            $method?->exclusive(),
-            $method?->withComments(),
+            $method->exclusive(),
+            $method->withComments(),
         );
     }
 
@@ -205,11 +205,13 @@ final class SignatureXml
         $ref = $this->getSignedPropertiesRef();
         $digestUrl = $ref->getElementsByTagName('DigestMethod')->item(0)->getAttribute('Algorithm');
 
-        $digest = DigestAlg::fromUrl($digestUrl);
-        if (!$digest) {
+        try {
+            $digest = DigestAlg::fromUrl($digestUrl);
+        } catch (\InvalidArgumentException) {
             $this->logger?->warning('signature_xml.invalid_digest_method', ['signatureId' => $this->id, 'algorithmUrl' => $digestUrl]);
             throw new InvalidSignatureXml("Unknown digest method: $digestUrl");
         }
+
         $this->logger?->debug('signature_xml.digest_method.resolved', ['signatureId' => $this->id, 'algorithmUrl' => $digestUrl]);
         return $digest;
     }
@@ -301,12 +303,16 @@ final class SignatureXml
     /**
      *
      * @param string $signerCertificate base64 encoded
-     * @param string $numOfFiles number of datafiles in container
+     * @param int $numOfFiles number of datafiles in container
      * @param array{City: string|null, StateOrProvince: string|null, PostalCode: int|string|null, CountryName: string|null} $productionPlace
      * @param array<int, string> $signerRoles
      */
-    public function createSignedProperties(string $signerCertificate, int $numOfFiles, array $productionPlace = [], array $signerRoles = []): DOMElement
-    {
+    public function createSignedProperties(
+        string $signerCertificate,
+        int $numOfFiles,
+        array $productionPlace = ['City' => null, 'StateOrProvince' => null, 'PostalCode' => null, 'CountryName' => null],
+        array $signerRoles = []
+    ): DOMElement {
         $this->logger?->info('signature_xml.signed_properties.start', [
             'signatureId' => $this->id,
             'numOfFiles' => $numOfFiles,

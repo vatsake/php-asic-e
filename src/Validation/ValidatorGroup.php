@@ -10,7 +10,7 @@ abstract class ValidatorGroup
 {
     abstract protected function getValidators(): array;
 
-    public function validate(...$context): array
+    public function validate(mixed ...$context): array
     {
         $logger = AsiceConfig::getLogger();
         $groupName = static::class;

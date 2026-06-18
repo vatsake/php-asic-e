@@ -7,6 +7,7 @@ namespace Vatsake\AsicE\Validation;
 use phpseclib3\File\X509;
 use Vatsake\AsicE\Api\HttpClient;
 use Vatsake\AsicE\AsiceConfig;
+use Vatsake\AsicE\Common\SingletonTrait;
 use Vatsake\AsicE\Common\Utils;
 use Vatsake\AsicE\Container;
 use Vatsake\AsicE\Exceptions\HttpException;
@@ -19,8 +20,10 @@ use Vatsake\AsicE\Exceptions\HttpException;
  * - Persist the trusted CA list via AsiceConfig and provide verify()/refresh().
  *
  */
-final class Lotl extends Container
+final class Lotl
 {
+    use SingletonTrait;
+
     private const LOTL_URL = 'https://ec.europa.eu/tools/lotl/eu-lotl.xml';
 
     private null|string $lastLotlLoaded = null;
@@ -127,7 +130,7 @@ final class Lotl extends Container
     private function loadLotl(): array
     {
         $lotlXml = $this->httpClient->get(self::LOTL_URL);
-        if ($lotlXml === false) {
+        if ($lotlXml === '') {
             throw new \RuntimeException('Failed to download EU LOTL.');
         }
         $xml = new \SimpleXMLElement($lotlXml, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);

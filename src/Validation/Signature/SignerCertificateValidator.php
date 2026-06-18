@@ -15,7 +15,9 @@ use Vatsake\AsicE\Container\Signature\SignatureXml;
  */
 class SignerCertificateValidator implements Validator
 {
-    public function __construct(private SignatureXml $xml) {}
+    public function __construct(private SignatureXml $xml)
+    {
+    }
 
     public function validate(): ValidationResult
     {

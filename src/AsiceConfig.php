@@ -5,20 +5,15 @@ declare(strict_types=1);
 namespace Vatsake\AsicE;
 
 use Psr\Log\LoggerInterface;
+use Vatsake\AsicE\Common\SingletonTrait;
 
 /**
  * Singleton container for ASiC-E configuration values.
- *
- * The implementation uses an internal singleton instance (via Container::getInstance()),
- * therefore all static setters mutate shared global state for the process.
- *
- * Notes and recommendations:
- *  - Because configuration is stored on a shared singleton, set configuration early
- *    in application bootstrap to avoid surprising global state changes.
- *  - setCountryCode accepts null to clear the stored country code.
  */
-final class AsiceConfig extends Container
+final class AsiceConfig
 {
+    use SingletonTrait;
+
     private ?string $tsaUrl = null;
     private ?string $ocspUrl = null;
     private ?string $countryCode = null;

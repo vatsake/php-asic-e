@@ -20,8 +20,7 @@ final class FinalizedSignature
     private ?LoggerInterface $logger = null;
 
     /**
-     * @param SignatureXml $xml
-     * @param array<string, array{0: DigestAlg, 1: string}> $fileDigests needed for validation
+     * @param array<string, array{0: DigestAlg, 1: string}> $realFileDigests needed for validation
      */
     public function __construct(private SignatureXml $signatureXml, private array $realFileDigests)
     {
@@ -75,7 +74,10 @@ final class FinalizedSignature
         return $result;
     }
 
-    private function validateSignature()
+    /**
+     * @return array<int, ValidationResult>
+     */
+    private function validateSignature(): array
     {
         $startedAt = microtime(true);
         $this->logger?->debug('finalized_signature.validate_signature.start');

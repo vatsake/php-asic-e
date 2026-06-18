@@ -9,6 +9,7 @@ use Vatsake\AsicE\Container\Signature\FinalizedSignature;
 use Vatsake\AsicE\Container\Signature\SignatureBuilder;
 use Vatsake\AsicE\Container\Signature\SignatureXml;
 use Vatsake\AsicE\Exceptions\EmptyContainerException;
+use Vatsake\AsicE\Validation\ValidationResult;
 
 final class Container
 {
@@ -61,8 +62,8 @@ final class Container
             $sigXml = new SignatureXml($this->writer->getFile($filename));
 
             $fileDigests = $sigXml->getFileDigestMethods();
-            foreach ($fileDigests as $filename => $values) {
-                $fileDigests[$filename] = [$values[0], $this->writer->getSignedFileAlg($values[0], $filename)];
+            foreach ($fileDigests as $dataFilename => $values) {
+                $fileDigests[$dataFilename] = [$values[0], $this->writer->getSignedFileAlg($values[0], $dataFilename)];
             }
 
             $signatures[] = new FinalizedSignature($sigXml, $fileDigests);
@@ -80,7 +81,7 @@ final class Container
             $isValid = $signature->isValid();
             $results[] = [
                 'index' => $index,
-                'valid' => $isValid ? true : false,
+                'valid' => $isValid,
                 'errors' => $isValid ? [] : $signature->getValidationErrors(),
             ];
         }

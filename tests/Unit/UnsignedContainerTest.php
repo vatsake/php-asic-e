@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vatsake\AsicE\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
-use Vatsake\AsicE\Container\UnsignedContainer;
+use Vatsake\AsicE\Container\ContainerBuilder;
 use Vatsake\AsicE\Container\Container;
 use Vatsake\AsicE\Exceptions\ContainerAlreadyFinalized;
 
@@ -13,7 +13,7 @@ class UnsignedContainerTest extends TestCase
 {
     public function testAddFile()
     {
-        $container = new UnsignedContainer();
+        $container = new ContainerBuilder();
         $container->addFile('test.txt', 'This is a test file.');
 
         $files = $container->getFiles();
@@ -23,7 +23,7 @@ class UnsignedContainerTest extends TestCase
 
     public function testBuildCreatesContainer()
     {
-        $container = new UnsignedContainer();
+        $container = new ContainerBuilder();
         $container->addFile('test.txt', 'This is a test file.');
 
         $tempPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'test-container-1.asice';
@@ -39,7 +39,7 @@ class UnsignedContainerTest extends TestCase
     {
         $this->expectException(ContainerAlreadyFinalized::class);
 
-        $container = new UnsignedContainer();
+        $container = new ContainerBuilder();
         $container->addFile('test.txt', 'This is a test file.');
 
         $tempPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'test-container-2.asice';
@@ -53,7 +53,7 @@ class UnsignedContainerTest extends TestCase
     {
         $this->expectException(ContainerAlreadyFinalized::class);
 
-        $container = new UnsignedContainer();
+        $container = new ContainerBuilder();
         $container->addFile('test.txt', 'This is a test file.');
 
         $tempPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'test-container-3.asice';

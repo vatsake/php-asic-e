@@ -16,7 +16,9 @@ use Vatsake\AsicE\Container\Signature\SignatureXml;
  */
 class PayloadValidator implements Validator
 {
-    public function __construct(private OcspBasicResponse $response, private SignatureXml $xml) {}
+    public function __construct(private OcspBasicResponse $response, private SignatureXml $xml)
+    {
+    }
 
     public function validate(): ValidationResult
     {

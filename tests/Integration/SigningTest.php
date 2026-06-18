@@ -14,7 +14,7 @@ use Vatsake\AsicE\Common\Utils;
 use Vatsake\AsicE\Container\Container;
 use Vatsake\AsicE\Container\Signature\FinalizedSignature;
 use Vatsake\AsicE\Container\Signature\SignatureBuilder;
-use Vatsake\AsicE\Container\UnsignedContainer;
+use Vatsake\AsicE\Container\ContainerBuilder;
 use Vatsake\AsicE\Crypto\SignAlg;
 
 class SigningTest extends TestCase
@@ -57,9 +57,9 @@ class SigningTest extends TestCase
         ]);
 
         $tempPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'test-container-1.asice';
-        $unsignedContainer = new UnsignedContainer();
-        $unsignedContainer->addFile('test.txt', 'This is a test file.');
-        $container = $unsignedContainer->build($tempPath);
+        $ContainerBuilder = new ContainerBuilder();
+        $ContainerBuilder->addFile('test.txt', 'This is a test file.');
+        $container = $ContainerBuilder->build($tempPath);
         $this->assertFileExists($tempPath);
 
         $signatureBuilder = $container->createSignature();
